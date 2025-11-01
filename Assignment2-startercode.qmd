@@ -1,0 +1,229 @@
+---
+title: "Informative Title Name"
+author: "GROUP NUMBER: ADD YOUR NAMES HERE"
+date: November 13, 2025
+subtitle: STA304 - Assignment 2
+format: pdf
+editor: visual
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+library(openintro)
+library(tidyverse)
+```
+
+# 1 Introduction
+
+Here you should have a few paragraphs of text introducing the problem, getting the reader interested/ready for the rest of the report.
+
+Introduce terminology.
+
+Highlight hypotheses.
+
+Optional: You can also include a description of each section of this report as a last paragraph.
+
+# 2 Data
+
+Type here a paragraph introducing the data, its context and as much info about the data collection process that you know.
+
+```{r, include = FALSE}
+
+# Here you can load in and clean the census data (you may need to do the cleaning in a separate R script). 
+
+census_data <- read_csv("canada_census2021.csv")
+
+# You may need additional chunks, in case you want to include some of the cleaning output.
+
+```
+
+Type here a summary of the cleaning process (**only add in stuff beyond my original gss_cleaning.R code**). You only need to describe additional cleaning that you and your group did.
+
+```{r, include = FALSE}
+
+# Here you can load in and clean the survey data (you may want to do the cleaning in a separate R script). 
+
+# We can load it in:
+survey_data <- read_csv("ces2021.csv")
+
+```
+
+```{r, include = FALSE}
+
+#### You will need to update/clean the code below based off the variables you want to use in your poststratification.
+
+## Note: Whatever variables were chosen from the survey data need to match what's in the census data (variable names and categories)
+
+survey_data <- 
+  survey_data %>% 
+  mutate(age = cps21_age,
+         prov = cps21_province,
+         vote_liberal = ifelse(cps21_votechoice==1, 1, 0)) %>% 
+  select(age, prov, vote_liberal)
+
+census_data <- census_data %>% 
+  mutate(age=round(agegrp),
+         prov=pr) %>% ## Note: needs better cleaning (to match survey)
+  select(age, prov)
+
+```
+
+Remember, you may want to use multiple datasets here, if you do end up using multiple data sets, or merging the data, be sure to describe this in the cleaning process and be sure to discuss important aspects of all the data that you used.
+
+Include a description of the important variables.
+
+```{r, include=FALSE}
+
+# Use this to calculate some summary measures. 
+
+```
+
+Include a description of the numerical summaries. Remember you can use `r` to use inline R code.
+
+```{r, echo = FALSE}
+
+# Use this to create some plots. Should probably describe both the sample and population.
+
+
+```
+
+Include a clear description of the plot(s). I would recommend one paragraph for each plot.
+
+# 3 Methods
+
+Include some text introducing the methodology, maybe restating the problem/goal of this analysis.
+
+## 3.1 Model Specifics
+
+Here you can describe your regression model
+
+I will (incorrectly) be using a linear regression model to model the proportion of voters who will vote for Donald Trump. This is a naive model. I will only be using age, which is recorded as a numeric variable, to model the probability of voting for Donald Trump. The simple linear regression model I am using is:
+
+$$ y = \beta_0+\beta_1  x_{age} + \epsilon$$
+
+Where $y$ represents the .... $\beta_0$ represents....
+
+```{r, include=FALSE}
+
+# Creating the Model
+model <- lm(vote_liberal ~ age + prov, data=survey_data)
+
+# Model Results (to Report in Results section)
+# summary(model)
+# OR
+# broom::tidy(model)
+
+### Don't show the results/output here...
+
+```
+
+## 3.2 Post-Stratification
+
+Here you should explain the poststratification process
+
+In order to estimate the proportion of voters.....
+
+To put math/LaTeX inline just use one set of dollar signs. Example: $\hat{y}^{PS}$
+
+To put math on its own line use two sets of dollar signs:
+
+$$ include.your.mathematical.model.here.if.you.have.some.math.to.show $$
+
+All analysis for this report was programmed using `R version 4.0.2` \[2\].
+
+# 4 Results
+
+```{r, include=FALSE}
+
+# Creating the Model
+model <- lm(vote_liberal ~ age + prov, data=survey_data)
+
+# Model Results (to Report in Results section)
+# summary(model)
+# OR
+# broom::tidy(model)
+```
+
+```{r, include=FALSE}
+
+# Here I will perform the post-stratification calculation
+census_data_counts <- census_data %>% 
+  group_by(age, prov) %>% 
+  summarise(n=n())
+
+census_data_counts$estimate <-
+  model %>% 
+  predict(newdata = census_data_counts, type="response")
+
+census_data_counts %>% 
+  ungroup(age) %>% 
+  mutate(liberal_predict_prop = estimate*n) %>%
+  summarise(liberal_predict = sum(liberal_predict_prop)/sum(n))
+
+```
+
+Here you present your results. You may want to put them into a well formatted table. Be sure that there is some text describing the results.
+
+Note: Alternatively you can use the `knitr::kable` function to create a well formatted table from your code. See here: <https://rmarkdown.rstudio.com/lesson-7.html>.
+
+Remember you can use `r` to use inline R code.
+
+```{r, echo = FALSE}
+
+# Here you can include some relevant visualizations.
+
+
+```
+
+|                                      | Liberal Party | Another Party |
+|--------------------------------------|---------------|---------------|
+| Predicted Percentage of Popular Vote | 0.286         | ??            |
+| Another Statistic?                   | ??            | ??            |
+
+: The proportions of outcome variable of interest calculated for the following political parties: Liberal.
+
+Include an explanation/interpretation of the visualizations. Make sure to comment on the appropriateness of the assumptions/results.
+
+# 5 Discussion
+
+Here you should give a summary of the Hypotheses, Methods and Results
+
+Highlight Key Results.
+
+Talk about big picture.
+
+Comment on any Weaknesses.
+
+Comment on Future Work/Next Steps
+
+End with a concluding paragraph to wrap up the report.
+
+\newpage
+
+# 6 Generative AI Statement
+
+Here is where you can explain your usage of Generative AI tool(s). Be sure to reference any tools with inline citations.
+
+Alternatively, if you did not use Generative AI, please include a brief statement outlining your workflow for completing this assignment.
+
+# 7 Ethics Statement
+
+Explain how you ensured that your analysis is reproducible (e.g., documenting code, using proper statistical methods).
+
+Since the CES 2021 data is publicly available, describe whether or not this the work completed in your report needs Research Ethics Board approval for the report the be made publicly available. Be sure to specifically discuss the privacy of human participants in this study.
+
+# 8 Bibliography
+
+1.  First reference in a consistent, formal citation style (e.g. APA).
+
+2.  Second reference in a consistent, formal citation style (e.g. APA).
+
+3.  Third reference in a consistent, formal citation style (e.g. APA).
+
+4.  Fourth reference in a consistent, formal citation style (e.g. APA).
+
+5.  Fifth reference in a consistent, formal citation style (e.g. APA).
+
+# 9 Appendix
+
+Any additional notes/derivations that are supplementary to the report can be added in an appendix. This section will not be directly graded, but may be included for completion-sake.
